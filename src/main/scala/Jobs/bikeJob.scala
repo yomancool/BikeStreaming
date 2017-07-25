@@ -10,22 +10,9 @@ import scala.io.Source
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
-/**
- * Custom Receiver that receives data over a socket. Received bytes are interpreted as
- * text and \n delimited lines are considered as records. They are then counted and printed.
- *
- * To run this on your local machine, you need to first run a Netcat server
- *    `$ nc -lk 9999`
- * and then run the example
- *    `$ bin/run-example org.apache.spark.examples.streaming.CustomReceiver localhost 9999`
- */
 object BikeJob {
   def main(args: Array[String]) {
     import util.Parsing._
-    // if (args.length < 2) {
-    //   System.err.println("Usage: CustomReceiver <hostname> <port>")
-    //   System.exit(1)
-    // }
 
     StreamingExamples.setStreamingLogLevels()
 
@@ -35,18 +22,21 @@ object BikeJob {
 
     val ssc = new StreamingContext(sparkConf, Seconds(3))
 
-    // val station_status = ssc.receiverStream(new citiBikeReceiver("https://gbfs.citibikenyc.com/gbfs/en/station_status.json")).flatMap(parseStatus)
-    // val station_info = ssc.receiverStream(new citiBikeReceiver("https://gbfs.citibikenyc.com/gbfs/en/station_information.json")).flatMap(parseInfo)
-    val station_status = ssc.receiverStream(new citiBikeReceiver("https://gbfs.citibikenyc.com/gbfs/en/station_status.json"))
-    val station_info = ssc.receiverStream(new citiBikeReceiver("https://gbfs.citibikenyc.com/gbfs/en/station_information.json"))
+    val station_status = ssc.receiverStream(new citiBikeReceiver("https://gbfs.citibikenyc.com/gbfs/en/station_status.json")).flatMap(parseStatus)
+    val station_info = ssc.receiverStream(new citiBikeReceiver("https://gbfs.citibikenyc.com/gbfs/en/station_information.json")).flatMap(parseInfo)
 
-    // // val words = lines.flatMap(_.split(" "))
-    // val wordCounts = words.map(x => (x, 1)).reduceByKey(_ + _)
-    println("start streaming");
-    station_status.foreachRDD(x => {println("station_status=====>"+ x.count());x.count()});
-    station_info.foreachRDD(x => {println("station_info=====>"+ x.count());x.count()});
+    println("start streaming")
 
-    //station_status.select(explode($"data.stations"))
+    //processing data
+    val status_pair = station_status.map{case(num_bikes_available, num_bikes_disabled, num_docks_available, num_docks_disabled, station_id) => (station_id, (num_bikes_available, num_bikes_disabled, num_docks_available, num_docks_disabled))}
+    val info_pair = station_info.map{case(capacity, lon, lat, station_id) => (station_id, (capacity, lon, lat))}
+    val station_pair = status_pair.join(info_pair).map{case(station_id, (status, info)) => (station_id, status._1,status._2,status._3,status._4,info._1,info._2,info._3)}
+
+    val stations = station_pair.map{case(station_id ,a,b,c,d,e,f,g) => station_id.zip(a.zip(b.zip(c.zip(d.zip(e.zip(f.zip(g))))))).map{case(id, (aa, (bb, (cc, (dd, (ee, (ff, gg))))))) => (id, (aa,bb,cc,dd,ee,ff,gg))}}
+
+    stations.foreachRDD(x => println("stations count ===>" + x.count))
+    // station schema
+    // (id, (num_bikes_available, num_bikes_disabled, num_docks_available, num_docks_disabled, capacity, lon, lat))
 
     ssc.start()
     ssc.awaitTermination()
