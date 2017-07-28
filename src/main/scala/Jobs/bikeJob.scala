@@ -34,7 +34,8 @@ object BikeJob {
 
     val stations = station_pair.map{case(station_id ,a,b,c,d,e,f,g) => station_id.zip(a.zip(b.zip(c.zip(d.zip(e.zip(f.zip(g))))))).map{case(id, (aa, (bb, (cc, (dd, (ee, (ff, gg))))))) => (id, (aa,bb,cc,dd,ee,ff,gg))}}
 
-    stations.foreachRDD(x => println("stations count ===>" + x.count))
+    stations.print()
+    //stations.foreachRDD(x => println("stations count ===>" + x.count))
     // station schema
     // (id, (num_bikes_available, num_bikes_disabled, num_docks_available, num_docks_disabled, capacity, lon, lat))
 
