@@ -9,6 +9,10 @@ import org.apache.spark.streaming.Seconds
 import scala.io.Source
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import java.net.URL
+import scala.io.Source
+import org.json4s._
+import org.json4s.native.JsonMethods._
 
 object BikeJob {
   def main(args: Array[String]) {
@@ -34,10 +38,39 @@ object BikeJob {
 
     val stations = station_pair.map{case(station_id ,a,b,c,d,e,f,g) => station_id.zip(a.zip(b.zip(c.zip(d.zip(e.zip(f.zip(g))))))).map{case(id, (aa, (bb, (cc, (dd, (ee, (ff, gg))))))) => (id, (aa,bb,cc,dd,ee,ff,gg))}}
 
-    stations.print()
-    //stations.foreachRDD(x => println("stations count ===>" + x.count))
     // station schema
     // (id, (num_bikes_available, num_bikes_disabled, num_docks_available, num_docks_disabled, capacity, lon, lat))
+    val station_list = stations.flatMap(list => list)
+
+    val id_status = station_list.map{
+        case(id, data) =>
+        (id, (data._3))
+    }
+    val start_lat = 40.68981035
+    val start_lon = -73.97493121
+    val result = station_list.map {
+        case(id, data) =>
+        val docks = data._3
+        val lat = data._7
+        val lon = data._6
+
+        val url = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=" + start_lat +"," + start_lon + "&destinations=" + lat + "," + lon + "&mode=bicycling&key=AIzaSyB_2tueX2QiPdzrQtmNZPz1LIwwj620gKQ"
+        val conn = (new URL(url)).openConnection()
+        conn.setConnectTimeout(1000)
+        conn.setReadTimeout(1000)
+        val stream = conn.getInputStream()
+        var src = (scala.util.control.Exception.catching(classOf[Throwable]) opt Source.fromInputStream(stream).mkString) match {
+          case Some(s: String) => s
+          case _ => ""
+        }
+        val json=parse(src)
+        val rows=(json \ "rows") \ "elements" \ "duration"
+        val time = (rows \ "value").extract[Int]
+
+        (id, time, docks)
+    }.filter{case(id, time, docks) => time < 2700}.map{case(id, time, docks) => (id, docks)}  //under 45 mins
+
+    result.print()
 
     ssc.start()
     ssc.awaitTermination()
