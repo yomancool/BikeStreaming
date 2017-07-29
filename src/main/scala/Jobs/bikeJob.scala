@@ -42,12 +42,17 @@ object BikeJob {
     // (id, (num_bikes_available, num_bikes_disabled, num_docks_available, num_docks_disabled, capacity, lon, lat))
     val station_list = stations.flatMap(list => list)
 
+
+
     val id_status = station_list.map{
         case(id, data) =>
         (id, (data._3))
     }
+
     val start_lat = 40.68981035
     val start_lon = -73.97493121
+
+    //get stations within 45 mins
     val result = station_list.map {
         case(id, data) =>
         val docks = data._3
