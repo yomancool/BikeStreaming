@@ -16,6 +16,7 @@ import org.json4s.native.JsonMethods._
 
 object BikeJob {
   def main(args: Array[String]) {
+      
     import util.Parsing._
 
     StreamingExamples.setStreamingLogLevels()
@@ -41,7 +42,6 @@ object BikeJob {
     // station schema
     // (id, (num_bikes_available, num_bikes_disabled, num_docks_available, num_docks_disabled, capacity, lon, lat))
     val station_list = stations.flatMap(list => list)
-
 
 
     val id_status = station_list.map{
@@ -73,7 +73,14 @@ object BikeJob {
         val time = (rows \ "value").extract[Int]
 
         (id, time, docks)
-    }.filter{case(id, time, docks) => time < 2700}.map{case(id, time, docks) => (id, docks)}  //under 45 mins
+    }.filter{case(id, time, docks) => time < 2700}
+    //.map{case(id, time, docks) => (id, docks)}  //under 45 mins
+
+
+    // result.foreachRDD(t => {
+    //     var result = t.map{case(id, time, docks) => (id, docks)}
+    //     result.saveAsTextFile("file/result")
+    // })
 
     result.print()
 

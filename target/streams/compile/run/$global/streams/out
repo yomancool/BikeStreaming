@@ -130,6 +130,19 @@
 [0m[[0mdebug[0m] [0m	/Users/Yomancool/.ivy2/cache/org.json4s/json4s-ast_2.10/jars/json4s-ast_2.10-3.2.11.jar[0m
 [0m[[0mdebug[0m] [0m	/Users/Yomancool/.ivy2/cache/org.yaml/snakeyaml/bundles/snakeyaml-1.15.jar[0m
 [0m[[0mdebug[0m] [0mWaiting for thread run-main-0 to terminate.[0m
+[0m[[31merror[0m] [0m(bike receiver) java.util.concurrent.RejectedExecutionException: Task scala.concurrent.impl.Future$PromiseCompletingRunnable@4d9ed3eb rejected from java.util.concurrent.ThreadPoolExecutor@f1d0237[Terminated, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0][0m
+java.util.concurrent.RejectedExecutionException: Task scala.concurrent.impl.Future$PromiseCompletingRunnable@4d9ed3eb rejected from java.util.concurrent.ThreadPoolExecutor@f1d0237[Terminated, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0]
+	at java.util.concurrent.ThreadPoolExecutor$AbortPolicy.rejectedExecution(ThreadPoolExecutor.java:2047)
+	at java.util.concurrent.ThreadPoolExecutor.reject(ThreadPoolExecutor.java:823)
+	at java.util.concurrent.ThreadPoolExecutor.execute(ThreadPoolExecutor.java:1369)
+	at scala.concurrent.impl.ExecutionContextImpl$$anon$1.execute(ExecutionContextImpl.scala:133)
+	at scala.concurrent.impl.Future$.apply(Future.scala:31)
+	at scala.concurrent.Future$.apply(Future.scala:485)
+	at org.apache.spark.streaming.receiver.ReceiverSupervisor.restartReceiver(ReceiverSupervisor.scala:199)
+	at org.apache.spark.streaming.receiver.ReceiverSupervisor.restartReceiver(ReceiverSupervisor.scala:183)
+	at org.apache.spark.streaming.receiver.Receiver.restart(Receiver.scala:208)
+	at receiver.citiBikeReceiver.receiver$citiBikeReceiver$$receive(myReceiver.scala:55)
+	at receiver.citiBikeReceiver$$anon$1.run(myReceiver.scala:27)
 [0m[[0mdebug[0m] [0m	Thread run-main-0 exited.[0m
 [0m[[0mdebug[0m] [0mWaiting for thread Thread-2 to terminate.[0m
 [0m[[0mdebug[0m] [0m	Thread Thread-2 exited.[0m
